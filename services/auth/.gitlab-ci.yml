@@ -7,7 +7,7 @@ variables:
   SERVICE_NAME: auth
   IMAGE_NAME: lumia-auth
 
-# Build stage - собираем Docker образ auth-service
+# Build stage
 build:
   stage: build
   image: docker:27-cli
@@ -28,7 +28,7 @@ build:
   tags:
     - docker
 
-# Deploy stage - деплой в Kubernetes
+# Deploy stage
 deploy:
   stage: deploy
   image: alpine:latest
