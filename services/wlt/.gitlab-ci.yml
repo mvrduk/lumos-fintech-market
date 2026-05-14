@@ -1,0 +1,62 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  SERVICE_NAME: wlt
+  IMAGE_NAME: lumia-wlt
+
+build:
+  stage: build
+  image: docker:27-cli
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t ${IMAGE_NAME}:${CI_COMMIT_SHA} .
+    - docker save ${IMAGE_NAME}:${CI_COMMIT_SHA} -o ${IMAGE_NAME}.tar
+  artifacts:
+    paths:
+      - ${IMAGE_NAME}.tar
+    expire_in: 1 hour
+  only:
+    refs:
+      - main
+    changes:
+      - services/wlt/**/*
+  tags:
+    - docker
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H 194.156.118.175 >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying ${SERVICE_NAME} service to Kubernetes..."
+    - scp ${IMAGE_NAME}.tar root@194.156.118.175:/tmp/
+    - ssh root@194.156.118.175 "k3s ctr images import /tmp/${IMAGE_NAME}.tar"
+    - echo "Updating deployment..."
+    - ssh root@194.156.118.175 "k3s ctr images rm docker.io/library/${IMAGE_NAME}:latest || true"
+    - ssh root@194.156.118.175 "k3s ctr images tag docker.io/library/${IMAGE_NAME}:${CI_COMMIT_SHA} docker.io/library/${IMAGE_NAME}:latest"
+    - scp -r ../../k8s/wlt.yaml root@194.156.118.175:/opt/lumia/k8s/
+    - ssh root@194.156.118.175 "kubectl apply -f /opt/lumia/k8s/wlt.yaml"
+    - ssh root@194.156.118.175 "kubectl rollout restart deployment/wlt-service -n lumia"
+    - ssh root@194.156.118.175 "kubectl rollout status deployment/wlt-service -n lumia --timeout=2m"
+    - echo "${SERVICE_NAME} service deployment complete!"
+    - ssh root@194.156.118.175 "kubectl get pods -n lumia -l app=wlt"
+  when: manual
+  only:
+    - main
+  environment:
+    name: production
+    url: http://lumia-system.ru
+  tags:
+    - deployment

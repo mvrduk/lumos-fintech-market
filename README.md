@@ -6,4 +6,4 @@ local development and production dev friendly
 
 
 ## Tech Stack
-Go • Kafka • PostgreSQL • ClickHouse • Redis • Kubernetes • Docker • Nginx • Prometheus • Grafana • Elasticsearch
+Go • Kafka • PostgreSQL • ClickHouse • Redis • Kubernetes • Docker • Nginx • Prometheus • Grafana • Elasticsearch • REST • gRPC  
