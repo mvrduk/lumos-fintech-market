@@ -1,0 +1,37 @@
+{                                                                                                                   
+    "type": "record",
+    "namespace": "lumia.wallet",
+    "name": "WalletEvent",                                                                                              
+    "fields": [
+      {                                                                                                                 
+        "name": "event_id",                                                                                           
+        "type": "string",
+        "doc": "Уникальный ID события для идемпотентности"                                                              
+      },
+      {                                                                                                                 
+        "name": "event_type",                                                                                         
+        "type": {
+          "type": "enum",                                                                                               
+          "name": "EventType",
+          "symbols": ["wallet.created", "wallet.deposited", "wallet.withdrawn", "wallet.reconciled"]                    
+        },                                                                                                              
+        "doc": "Тип события которое произошло"
+      },                                                                                                                
+      {                                                                                                               
+        "name": "wallet_id",
+        "type": "int",
+        "doc": "ID кошелька"
+      },                                                                                                                
+      {
+        "name": "amount",                                                                                               
+        "type": "string",                                                                                             
+        "doc": "Сумма операции (как строка для точности)"
+      },                                                                                                                
+      {
+        "name": "timestamp",                                                                                            
+        "type": "long",                                                                                               
+        "logicalType": "timestamp-millis",
+        "doc": "Когда произошло событие"                                                                                
+      }
+    ]                                                                                                                   
+  }
